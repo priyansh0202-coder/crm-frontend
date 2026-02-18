@@ -7,10 +7,12 @@ import AdminRoutes from "@/components/AdminRoutes"
 import LeadsPage from "@/pages/leads/LeadsPage"
 import LeadDetailPage from "@/pages/leads/LeadDetailPage"
 import AdminDashboard from "@/pages/admin/AdminDashboard"
+import DealsPage from "@/pages/deals/DealsPage"
+import PipelinePage from "@/pages/deals/PipelinePage"
 
 function App() {
   return (
-    <div className="min-h-screen bg-background text-foreground ">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -25,13 +27,15 @@ function App() {
                   Welcome to Our CRM
                 </h1>
                 <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Manage your customer relationships with ease. Built with Tailwind CSS and Shadcn UI.
+                  Manage your customer relationships with ease.
                 </p>
               </section>
             </main>
           } />
           <Route path="/leads" element={<LeadsPage />} />
           <Route path="/leads/:id" element={<LeadDetailPage />} />
+          <Route path="/deals" element={<DealsPage />} />
+          <Route path="/pipeline" element={<PipelinePage />} />
 
           {/* Admin-only Routes */}
           <Route element={<AdminRoutes />}>

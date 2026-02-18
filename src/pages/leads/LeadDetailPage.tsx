@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getLeadById } from "@/api/leads";
+import { getDeals } from "@/api/deals";
 import type { Lead } from "@/types/lead";
+import type { Deal } from "@/types/deal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadStatusBadge } from "@/components/leads/LeadStatusBadge";
 import { EditLeadDialog } from "@/components/leads/EditLeadDialog";
 import { DeleteLeadDialog } from "@/components/leads/DeleteLeadDialog";
+import { CreateDealDialog } from "@/components/deals/CreateDealDialog";
+import { DeleteDealDialog } from "@/components/deals/DeleteDealDialog";
+import { DealStageBadge } from "@/components/deals/DealStageBadge";
+import { ActivitySection } from "@/components/activities/ActivitySection";
 import {
     ArrowLeft,
     Loader2,
@@ -18,6 +24,9 @@ import {
     Building2,
     User,
     Calendar,
+    Plus,
+    DollarSign,
+    Handshake,
 } from "lucide-react";
 
 export const LeadDetailPage = () => {
@@ -29,6 +38,13 @@ export const LeadDetailPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
+
+    // Deals state
+    const [deals, setDeals] = useState<Deal[]>([]);
+    const [dealsLoading, setDealsLoading] = useState(false);
+    const [createDealOpen, setCreateDealOpen] = useState(false);
+    const [deleteDealOpen, setDeleteDealOpen] = useState(false);
+    const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
 
     const fetchLead = async () => {
         if (!id) return;
@@ -51,17 +67,25 @@ export const LeadDetailPage = () => {
         }
     };
 
+    const fetchDeals = async () => {
+        setDealsLoading(true);
+        try {
+            const data = await getDeals();
+            setDeals(data.deals.filter((d) => d.lead?._id === id));
+        } catch {
+            
+        } finally {
+            setDealsLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchLead();
+        fetchDeals();
     }, [id]);
 
-    const handleEditSuccess = () => {
-        fetchLead();
-    };
-
-    const handleDeleteSuccess = () => {
-        navigate("/leads");
-    };
+    const formatCurrency = (val: number) =>
+        new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val);
 
     if (loading) {
         return (
@@ -81,9 +105,7 @@ export const LeadDetailPage = () => {
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-destructive">
                     <AlertCircle className="h-10 w-10" />
                     <p className="text-base font-medium">{error}</p>
-                    <Button variant="outline" onClick={() => navigate("/leads")}>
-                        Go Back
-                    </Button>
+                    <Button variant="outline" onClick={() => navigate("/leads")}>Go Back</Button>
                 </div>
             </div>
         );
@@ -93,7 +115,6 @@ export const LeadDetailPage = () => {
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-3xl">
-            {/* Back + Actions */}
             <div className="flex items-center justify-between mb-6">
                 <Button variant="ghost" onClick={() => navigate("/leads")}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -130,7 +151,7 @@ export const LeadDetailPage = () => {
             </Card>
 
             {/* Lead Details */}
-            <Card>
+            <Card className="mb-6">
                 <CardHeader>
                     <CardTitle className="text-base font-semibold text-muted-foreground uppercase tracking-wide">
                         Contact Information
@@ -188,9 +209,7 @@ export const LeadDetailPage = () => {
                             <p className="text-xs text-muted-foreground">Created At</p>
                             <p className="text-sm font-medium">
                                 {new Date(lead.createdAt).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
+                                    year: "numeric", month: "long", day: "numeric",
                                 })}
                             </p>
                         </div>
@@ -198,9 +217,103 @@ export const LeadDetailPage = () => {
                 </CardContent>
             </Card>
 
-            {/* Dialogs */}
-            <EditLeadDialog open={editOpen} onOpenChange={setEditOpen} onSuccess={handleEditSuccess} lead={lead} />
-            <DeleteLeadDialog open={deleteOpen} onOpenChange={setDeleteOpen} onSuccess={handleDeleteSuccess} lead={lead} />
+            {/* Deals Section */}
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="text-base font-semibold text-muted-foreground uppercase tracking-wide">
+                            Deals
+                        </CardTitle>
+                        {deals.length > 0 && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Total:{" "}
+                                <span className="font-semibold text-foreground">
+                                    {formatCurrency(deals.reduce((s, d) => s + d.value, 0))}
+                                </span>
+                            </p>
+                        )}
+                    </div>
+                    <Button size="sm" onClick={() => setCreateDealOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        New Deal
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    {dealsLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        </div>
+                    ) : deals.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground border-2 border-dashed rounded-lg">
+                            <Handshake className="h-8 w-8" />
+                            <p className="text-sm">No deals yet for this lead</p>
+                            <Button size="sm" variant="outline" onClick={() => setCreateDealOpen(true)}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Create First Deal
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="grid gap-3">
+                            {deals.map((deal) => (
+                                <div
+                                    key={deal._id}
+                                    className="flex items-center justify-between rounded-lg border p-3 bg-muted/20"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                                            <DollarSign className="h-4 w-4 text-primary" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold">{formatCurrency(deal.value)}</p>
+                                            {deal.expectedCloseDate && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    Close:{" "}
+                                                    {new Date(deal.expectedCloseDate).toLocaleDateString("en-US", {
+                                                        month: "short", day: "numeric", year: "numeric",
+                                                    })}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <DealStageBadge stage={deal.stage} />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            onClick={() => { setSelectedDeal(deal); setDeleteDealOpen(true); }}
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Activity Section */}
+            <ActivitySection leadId={lead._id} />
+
+            {/* Lead Dialogs */}
+            <EditLeadDialog open={editOpen} onOpenChange={setEditOpen} onSuccess={fetchLead} lead={lead} />
+            <DeleteLeadDialog open={deleteOpen} onOpenChange={setDeleteOpen} onSuccess={() => navigate("/leads")} lead={lead} />
+
+            {/* Deal Dialogs */}
+            <CreateDealDialog
+                open={createDealOpen}
+                onOpenChange={setCreateDealOpen}
+                onSuccess={fetchDeals}
+                leadId={lead._id}
+                leadName={lead.name}
+            />
+            <DeleteDealDialog
+                open={deleteDealOpen}
+                onOpenChange={setDeleteDealOpen}
+                onSuccess={fetchDeals}
+                deal={selectedDeal}
+            />
         </div>
     );
 };

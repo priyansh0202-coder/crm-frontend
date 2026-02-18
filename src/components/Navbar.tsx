@@ -31,6 +31,8 @@ export const Navbar = () => {
     const authNavLinks = [
         { name: "Home", href: "/" },
         { name: "Leads", href: "/leads" },
+        { name: "Deals", href: "/deals" },
+        { name: "Pipeline", href: "/pipeline" },
         ...(isAdmin ? [{ name: "Admin", href: "/admin" }] : []),
     ];
 
