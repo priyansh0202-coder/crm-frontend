@@ -316,7 +316,7 @@ export const DashboardPage = () => {
                                                     tickLine={false}
                                                     allowDecimals={false}
                                                 />
-                                                <Tooltip content={<BarTip />} cursor={{ fill: "hsl(var(--muted))", radius: 6 }} />
+                                                    <Tooltip content={<BarTip />} cursor={{ fill: "rgba(0,0,0,0.04)", radius: 6 }} />
                                                 <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                                                     {barData.map((entry, i) => (
                                                         <Cell key={i} fill={entry.fill} />
