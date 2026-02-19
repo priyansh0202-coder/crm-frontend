@@ -32,8 +32,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ─── Config ────────────────────────────────────────────────────────────────
-
 const ACTIVITY_TYPES: ActivityType[] = ["Call", "Meeting", "Note", "Follow-up"];
 
 const typeConfig: Record<
@@ -62,8 +60,6 @@ const typeConfig: Record<
     },
 };
 
-// ─── Type Badge ─────────────────────────────────────────────────────────────
-
 const ActivityTypeBadge = ({ type }: { type: ActivityType }) => {
     const config = typeConfig[type];
     return (
@@ -78,8 +74,6 @@ const ActivityTypeBadge = ({ type }: { type: ActivityType }) => {
         </span>
     );
 };
-
-// ─── Create Form ─────────────────────────────────────────────────────────────
 
 interface CreateActivityFormProps {
     leadId: string;
@@ -227,8 +221,6 @@ const CreateActivityForm = ({ leadId, onSuccess, onCancel }: CreateActivityFormP
     );
 };
 
-// ─── Activity Item ───────────────────────────────────────────────────────────
-
 interface ActivityItemProps {
     activity: Activity;
     onDelete: (id: string) => void;
@@ -253,7 +245,6 @@ const ActivityItem = ({ activity, onDelete, isDeleting }: ActivityItemProps) => 
 
     return (
         <div className="flex gap-3">
-            {/* Timeline dot + line */}
             <div className="flex flex-col items-center">
                 <div
                     className={cn(
@@ -289,7 +280,6 @@ const ActivityItem = ({ activity, onDelete, isDeleting }: ActivityItemProps) => 
                     </Button>
                 </div>
 
-                {/* Description */}
                 <p
                     className={cn(
                         "text-sm text-foreground leading-relaxed",
@@ -324,8 +314,6 @@ const ActivityItem = ({ activity, onDelete, isDeleting }: ActivityItemProps) => 
     );
 };
 
-// ─── Main ActivitySection ────────────────────────────────────────────────────
-
 interface ActivitySectionProps {
     leadId: string;
 }
@@ -342,7 +330,6 @@ export const ActivitySection = ({ leadId }: ActivitySectionProps) => {
         setError(null);
         try {
             const data = await getActivitiesByLead(leadId);
-            // Already sorted descending by backend, but ensure it
             setActivities(data.activities);
         } catch (err: any) {
             const status = err.response?.status;
@@ -400,7 +387,6 @@ export const ActivitySection = ({ leadId }: ActivitySectionProps) => {
             </CardHeader>
 
             <CardContent className="pt-0">
-                {/* Create Form */}
                 {showForm && (
                     <div className="mb-4">
                         <CreateActivityForm
@@ -410,15 +396,11 @@ export const ActivitySection = ({ leadId }: ActivitySectionProps) => {
                         />
                     </div>
                 )}
-
-                {/* Loading */}
                 {loading && (
                     <div className="flex items-center justify-center py-10">
                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
                 )}
-
-                {/* Error */}
                 {!loading && error && (
                     <div className="flex flex-col items-center justify-center py-8 gap-2 text-destructive">
                         <AlertCircle className="h-6 w-6" />
@@ -429,7 +411,6 @@ export const ActivitySection = ({ leadId }: ActivitySectionProps) => {
                     </div>
                 )}
 
-                {/* Empty state */}
                 {!loading && !error && activities.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground border-2 border-dashed rounded-lg">
                         <ActivityIcon className="h-8 w-8" />
@@ -449,7 +430,6 @@ export const ActivitySection = ({ leadId }: ActivitySectionProps) => {
                     </div>
                 )}
 
-                {/* Timeline */}
                 {!loading && !error && activities.length > 0 && (
                     <div className="mt-1">
                         {activities.map((activity, idx) => (

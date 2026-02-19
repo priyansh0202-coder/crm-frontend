@@ -115,8 +115,6 @@ export const AdminDashboard = () => {
                 <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
                 <p className="text-muted-foreground mt-1">Manage users and monitor sales performance.</p>
             </div>
-
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                 <Card>
                     <CardContent className="pt-6">
@@ -203,7 +201,6 @@ export const AdminDashboard = () => {
                 </CardContent>
             </Card>
 
-            {/* Sales Users with Leads */}
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>

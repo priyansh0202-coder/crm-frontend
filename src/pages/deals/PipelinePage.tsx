@@ -104,7 +104,6 @@ const KanbanColumn = ({ stage, deals, onDrop, onDelete, updatingId }: KanbanColu
                 if (dealId) onDrop(dealId, stage);
             }}
         >
-            {/* Column Header */}
             <div className="p-3 border-b">
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -117,8 +116,6 @@ const KanbanColumn = ({ stage, deals, onDrop, onDelete, updatingId }: KanbanColu
                 </div>
                 <p className="text-xs text-muted-foreground font-medium">{formatCurrency(columnTotal)}</p>
             </div>
-
-            {/* Cards */}
             <div className="flex flex-col gap-2 p-2 flex-1">
                 {deals.map((deal) => (
                     <KanbanCard
@@ -171,13 +168,11 @@ export const PipelinePage = () => {
         if (!deal || deal.stage === newStage) return;
 
         setUpdatingId(dealId);
-        // Optimistic update
         setDeals((prev) => prev.map((d) => d._id === dealId ? { ...d, stage: newStage } : d));
 
         try {
             await updateDealStage(dealId, { stage: newStage });
         } catch (err: any) {
-            // Revert on failure
             setDeals((prev) => prev.map((d) => d._id === dealId ? { ...d, stage: deal.stage } : d));
             alert(err.response?.data?.message || "Failed to update stage.");
         } finally {
@@ -219,7 +214,6 @@ export const PipelinePage = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-3xl font-bold">Sales Pipeline</h1>
@@ -235,14 +229,10 @@ export const PipelinePage = () => {
                     Refresh
                 </Button>
             </div>
-
-            {/* Tip */}
             <p className="text-xs text-muted-foreground mb-4 flex items-center gap-1">
                 <GripVertical className="h-3 w-3" />
                 Drag and drop cards to move deals between stages
             </p>
-
-            {/* Kanban Board */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {DEAL_STAGES.map((stage) => (
                     <KanbanColumn

@@ -5,7 +5,7 @@ const ProtectedRoutes = () => {
     const { token, isLoading } = useAuth();
 
     if (isLoading) {
-        return <div>Loading...</div>; // Or a spinner component
+        return <div>Loading...</div>; 
     }
 
     return token ? <Outlet /> : <Navigate to="/login" replace />;

@@ -9,6 +9,7 @@ import LeadDetailPage from "@/pages/leads/LeadDetailPage"
 import AdminDashboard from "@/pages/admin/AdminDashboard"
 import DealsPage from "@/pages/deals/DealsPage"
 import PipelinePage from "@/pages/deals/PipelinePage"
+import DashboardPage from "@/pages/Dashboard"
 
 function App() {
   return (
@@ -20,18 +21,7 @@ function App() {
 
         {/* Protected Routes (any logged-in user) */}
         <Route element={<ProtectedRoutes />}>
-          <Route path="/" element={
-            <main className="container mx-auto px-4 py-8">
-              <section className="flex flex-col items-center justify-center space-y-4 py-24 text-center">
-                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl text-primary">
-                  Welcome to Our CRM
-                </h1>
-                <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Manage your customer relationships with ease.
-                </p>
-              </section>
-            </main>
-          } />
+          <Route path="/" element={<DashboardPage />} />
           <Route path="/leads" element={<LeadsPage />} />
           <Route path="/leads/:id" element={<LeadDetailPage />} />
           <Route path="/deals" element={<DealsPage />} />

@@ -41,14 +41,11 @@ export const Navbar = () => {
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-                {/* Logo */}
                 <div className="flex items-center gap-2">
                     <Link to="/" className="flex items-center gap-2">
                         <span className="text-2xl font-bold text-primary">CRM</span>
                     </Link>
                 </div>
-
-                {/* Desktop Navigation */}
                 <nav className="hidden md:flex items-center gap-6">
                     {navLinks.map((link) => (
                         <Link
@@ -60,10 +57,7 @@ export const Navbar = () => {
                         </Link>
                     ))}
                 </nav>
-
-                {/* User Actions & Mobile Menu */}
                 <div className="flex items-center gap-4">
-                    {/* Desktop Auth Buttons */}
                     <div className="hidden md:flex items-center gap-4">
                         {isAuthenticated ? (
                             <DropdownMenu>
@@ -111,8 +105,6 @@ export const Navbar = () => {
                             </>
                         )}
                     </div>
-
-                    {/* Mobile Menu Trigger */}
                     <Sheet>
                         <SheetTrigger asChild>
                             <Button variant="ghost" size="icon" className="md:hidden">

@@ -45,15 +45,14 @@ export const Register = () => {
             const response = await registerUser(formData);
 
             if (response.success && response.token) {
-                // Automatically login the user
                 login(response.token, {
                     id: response._id,
                     name: response.name,
                     email: response.email,
+                    role: response.role,
                 });
                 navigate("/");
             } else {
-                // Fallback if success is true but something is missing
                 setError("Registration successful but login failed. Please try logging in.");
                 navigate("/login");
             }

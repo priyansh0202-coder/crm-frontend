@@ -47,7 +47,6 @@ export const Login = () => {
             }
         } catch (err: any) {
             console.error("Login error:", err);
-            // Handle backend error messages (string or array of errors)
             const backendError = err.response?.data;
             let errorMessage = "Something went wrong. Please try again.";
 
@@ -55,7 +54,6 @@ export const Login = () => {
                 if (backendError.message) {
                     errorMessage = backendError.message;
                 } else if (backendError.errors && Array.isArray(backendError.errors)) {
-                    // Combine validation errors
                     errorMessage = backendError.errors.map((e: any) => e.msg).join(", ");
                 }
             }
