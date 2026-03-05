@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { Navbar } from "@/components/Navbar"
 import Login from "@/pages/Login"
 import Register from "@/pages/Register"
@@ -11,10 +11,15 @@ import DealsPage from "@/pages/deals/DealsPage"
 import PipelinePage from "@/pages/deals/PipelinePage"
 import DashboardPage from "@/pages/Dashboard"
 
+const AUTH_ROUTES = ["/login", "/register"];
+
 function App() {
+  const location = useLocation();
+  const hideNavbar = AUTH_ROUTES.includes(location.pathname);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
+      {!hideNavbar && <Navbar />}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

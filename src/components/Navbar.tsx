@@ -39,19 +39,19 @@ export const Navbar = () => {
     const navLinks = isAuthenticated ? authNavLinks : publicNavLinks;
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="sticky top-0 z-50 w-full border-b bg-primary">
             <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
                 <div className="flex items-center gap-2">
                     <Link to="/" className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-primary">CRM</span>
+                        <span className="text-2xl font-bold text-background">CRM</span>
                     </Link>
                 </div>
-                <nav className="hidden md:flex items-center gap-6">
+                <nav className="hidden md:flex items-center  gap-12">
                     {navLinks.map((link) => (
                         <Link
                             key={link.name}
                             to={link.href}
-                            className="text-sm font-medium transition-colors hover:text-primary"
+                            className="text-md text-background font-medium px-4 py-2 rounded-md transition-all duration-200 hover:bg-gray-800 hover:text-white hover:cursor-pointer"
                         >
                             {link.name}
                         </Link>
