@@ -82,7 +82,7 @@ export const Login = () => {
             </span>
           </div>
           <p className="text-indigo-300 text-sm">
-            © 2025 CRM Pro · Trusted by 10,000+ businesses
+            © 2026 CRM Pro · Trusted by 10,000+ businesses
           </p>
         </div>
       </div>
