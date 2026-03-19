@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { getDashboardData } from "@/api/dashboard";
 import type { DashboardResponse } from "@/types/dashboard";
 import { useAuth } from "@/context/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
     BarChart,
     Bar,
@@ -24,8 +22,8 @@ import {
     TrendingUp,
     RefreshCw,
     AlertCircle,
+    MoreHorizontal,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 // ── Consistent muted palette ──────────────────────────────────────────────────
 const STAGE_COLORS: Record<string, string> = {
@@ -38,7 +36,7 @@ const STAGE_COLORS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
     New: "#6366f1",
     Contacted: "#3b82f6",
-    Qualified: "#22c55e",
+    Qualified: "#c4c4cc",
     Lost: "#ef4444",
 };
 
@@ -54,98 +52,33 @@ const fmt = (val: number) =>
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 const Skeleton = ({ className }: { className?: string }) => (
-    <div className={cn("animate-pulse rounded-xl bg-muted", className)} />
-);
-
-// ── Stat Card (clean, no gradient) ───────────────────────────────────────────
-interface StatCardProps {
-    label: string;
-    value: string;
-    sub: string;
-    icon: React.ReactNode;
-    iconColor: string;
-    iconBg: string;
-}
-
-const StatCard = ({ label, value, sub, icon, iconColor, iconBg }: StatCardProps) => (
-    <Card className="rounded-2xl border-0 shadow-md bg-card">
-        <CardContent className="p-5">
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wide">
-                        {label}
-                    </p>
-                    <p className="text-3xl font-bold text-foreground tracking-tight">{value}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{sub}</p>
-                </div>
-                <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", iconBg)}>
-                    <div className={iconColor}>{icon}</div>
-                </div>
-            </div>
-        </CardContent>
-    </Card>
-);
-
-// ── Win Rate Card ─────────────────────────────────────────────────────────────
-const WinRateCard = ({ rate, won, total }: { rate: number; won: number; total: number }) => (
-    <Card className="rounded-2xl border-0 shadow-md bg-card">
-        <CardContent className="p-5">
-            <div className="flex items-center gap-5">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50">
-                    <TrendingUp className="h-5 w-5 text-amber-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 mb-2">
-                        <p className="text-2xl font-bold text-foreground">{rate}%</p>
-                        <p className="text-sm text-muted-foreground">overall win rate</p>
-                        <span className={cn(
-                            "ml-auto text-xs font-semibold",
-                            rate >= 50 ? "text-green-600" : "text-amber-500"
-                        )}>
-                            {rate >= 50 ? "↑ On target" : "↓ Below 50%"}
-                        </span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                        <div
-                            className={cn("h-full rounded-full transition-all duration-700",
-                                rate >= 50 ? "bg-green-500" : "bg-amber-400"
-                            )}
-                            style={{ width: `${Math.min(rate, 100)}%` }}
-                        />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1.5">
-                        {won} won out of {total} total deals
-                    </p>
-                </div>
-            </div>
-        </CardContent>
-    </Card>
+    <div className={`dashboard-skeleton ${className || ""}`} />
 );
 
 // ── Custom Tooltips ───────────────────────────────────────────────────────────
 const BarTip = ({ active, payload, label }: any) =>
     active && payload?.length ? (
-        <div className="rounded-xl bg-background shadow-lg border border-border/50 px-3 py-2 text-sm">
-            <p className="font-semibold mb-0.5">{label}</p>
-            <p className="text-muted-foreground">
-                Deals: <span className="font-bold text-foreground">{payload[0].value}</span>
+        <div className="chart-tooltip">
+            <p className="chart-tooltip-label">{label}</p>
+            <p className="chart-tooltip-value">
+                Deals: <span>{payload[0].value}</span>
             </p>
         </div>
     ) : null;
 
 const PieTip = ({ active, payload }: any) =>
     active && payload?.length ? (
-        <div className="rounded-xl bg-background shadow-lg border border-border/50 px-3 py-2 text-sm">
-            <p className="font-semibold">{payload[0].name}</p>
-            <p className="text-muted-foreground">
-                Leads: <span className="font-bold text-foreground">{payload[0].value}</span>
+        <div className="chart-tooltip">
+            <p className="chart-tooltip-label">{payload[0].name}</p>
+            <p className="chart-tooltip-value">
+                Leads: <span>{payload[0].value}</span>
             </p>
         </div>
     ) : null;
 
 // ── Dashboard Page ────────────────────────────────────────────────────────────
 export const DashboardPage = () => {
-    const { user, isAdmin } = useAuth();
+    const { isAdmin } = useAuth();
     const [data, setData] = useState<DashboardResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -178,248 +111,271 @@ export const DashboardPage = () => {
         fill: STATUS_COLORS[s._id] ?? FALLBACK_COLORS[i % FALLBACK_COLORS.length],
     }));
 
+    const totalLeads = overview?.totalLeads ?? 0;
+
     const winRate =
         overview && overview.totalDeals > 0
             ? Math.round((overview.wonDeals / overview.totalDeals) * 100)
             : 0;
 
     return (
-        <div className="min-h-screen bg-muted/20">
-            <div className="container mx-auto px-4 sm:px-6 py-8 ">
-
-                {/* ── Header ── */}
-                <div className="flex items-center justify-between mb-8">
+        <>
+            {/* ── Page Header ── */}
+            <div className="content-header">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div>
-                        <h1 className="text-2xl font-bold text-foreground">
-                            Welcome back, {user?.name?.split(" ")[0] ?? "there"} 👋
-                        </h1>
-                        <p className="text-muted-foreground text-sm mt-0.5">
-                            {isAdmin
-                                ? "Here's an overview of the entire CRM."
-                                : "Here's a summary of your leads and deals."}
+                        <h2 className="content-title">Performance Overview</h2>
+                        <p className="content-subtitle">
+                            Real-time metrics and pipeline analytics for Q4
                         </p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="shadow-sm">
-                        <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
-                        Refresh
-                    </Button>
+                    <button className="topbar-create-btn" onClick={fetchData} disabled={loading}>
+                        {loading ? (
+                            <>
+                                <RefreshCw className="h-4 w-4 animate-spin" />
+                                <span className="topbar-create-text">Refreshing</span>
+                            </>
+                        ) : (
+                            <>
+                                <RefreshCw className="h-4 w-4" />
+                                <span className="topbar-create-text">Refresh</span>
+                            </>
+                        )}
+                    </button>
                 </div>
+            </div>
 
-                {/* ── Error ── */}
-                {error && (
-                    <div className="flex flex-col items-center justify-center py-20 gap-3 text-destructive">
-                        <AlertCircle className="h-10 w-10" />
-                        <p className="font-medium">{error}</p>
-                        <Button variant="outline" onClick={fetchData}>Try Again</Button>
+            {/* ── Error ── */}
+            {error && (
+                <div className="dashboard-error">
+                    <AlertCircle className="h-10 w-10" />
+                    <p>{error}</p>
+                    <button className="error-retry-btn" onClick={fetchData}>Try Again</button>
+                </div>
+            )}
+
+            {/* ── Loading skeleton ── */}
+            {loading && !error && (
+                <div className="dashboard-loading">
+                    <div className="stat-cards-grid">
+                        {[...Array(4)].map((_, i) => <Skeleton key={i} className="skeleton-stat" />)}
                     </div>
-                )}
+                    <Skeleton className="skeleton-winrate" />
+                    <div className="charts-grid">
+                        <Skeleton className="skeleton-bar" />
+                        <Skeleton className="skeleton-pie" />
+                    </div>
+                </div>
+            )}
 
-                {/* ── Loading skeleton ── */}
-                {loading && !error && (
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28" />)}
+            {/* ── Main content ── */}
+            {!loading && !error && data && (
+                <div className="dashboard-data">
+
+                    {/* Stat cards */}
+                    <div className="stat-cards-grid">
+                        {/* Total Leads */}
+                        <div className="stat-card">
+                            <div className="stat-card-top">
+                                <div className="stat-icon stat-icon-blue">
+                                    <Users className="h-5 w-5" />
+                                </div>
+                                <span className="stat-change stat-change-positive">+12%</span>
+                            </div>
+                            <p className="stat-label">Total Leads</p>
+                            <p className="stat-value">{overview!.totalLeads}</p>
                         </div>
-                        <Skeleton className="h-20" />
-                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                            <Skeleton className="lg:col-span-3 h-72" />
-                            <Skeleton className="lg:col-span-2 h-72" />
+
+                        {/* Total Deals */}
+                        <div className="stat-card">
+                            <div className="stat-card-top">
+                                <div className="stat-icon stat-icon-orange">
+                                    <Handshake className="h-5 w-5" />
+                                </div>
+                                <span className="stat-change stat-change-positive">+4%</span>
+                            </div>
+                            <p className="stat-label">Total Deals</p>
+                            <p className="stat-value">{overview!.totalDeals}</p>
+                        </div>
+
+                        {/* Revenue Won */}
+                        <div className="stat-card">
+                            <div className="stat-card-top">
+                                <div className="stat-icon stat-icon-green">
+                                    <DollarSign className="h-5 w-5" />
+                                </div>
+                                <span className="stat-change stat-change-positive">+22%</span>
+                            </div>
+                            <p className="stat-label">Revenue Won</p>
+                            <p className="stat-value">{fmt(overview!.totalRevenue)}</p>
+                        </div>
+
+                        {/* Deals Lost */}
+                        <div className="stat-card">
+                            <div className="stat-card-top">
+                                <div className="stat-icon stat-icon-red">
+                                    <XCircle className="h-5 w-5" />
+                                </div>
+                                <span className="stat-change stat-change-negative">-2%</span>
+                            </div>
+                            <p className="stat-label">Deals Lost</p>
+                            <p className="stat-value">{overview!.lostDeals}</p>
                         </div>
                     </div>
-                )}
 
-                {/* ── Main content ── */}
-                {!loading && !error && data && (
-                    <div className="space-y-6">
+                    {/* Win rate */}
+                    <div className="winrate-card">
+                        <div className="winrate-header">
+                            <div className="winrate-info">
+                                <h3 className="winrate-title">{winRate}% overall win rate</h3>
+                                <p className="winrate-subtitle">Pipeline efficiency against monthly benchmarks</p>
+                            </div>
+                            <div className={`winrate-badge ${winRate >= 50 ? "winrate-badge-good" : "winrate-badge-warn"}`}>
+                                <TrendingUp className="h-4 w-4" />
+                                <span>{winRate >= 50 ? "On target" : "Below target"}</span>
+                            </div>
+                        </div>
+                        <div className="winrate-bar-track">
+                            <div
+                                className="winrate-bar-fill"
+                                style={{ width: `${Math.min(winRate, 100)}%` }}
+                            />
+                            {/* Goal marker */}
+                            <div className="winrate-goal-marker" style={{ left: "75%" }} />
+                        </div>
+                        <div className="winrate-labels">
+                            <span>0% MILESTONE</span>
+                            <span>GOAL: 75%</span>
+                            <span>100% REACH</span>
+                        </div>
+                    </div>
 
-                        {/* Stat cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <StatCard
-                                label="Total Leads"
-                                value={String(overview!.totalLeads)}
-                                sub={isAdmin ? "Across all reps" : "Assigned to you"}
-                                icon={<Users className="h-5 w-5" />}
-                                iconBg="bg-indigo-50"
-                                iconColor="text-indigo-500"
-                            />
-                            <StatCard
-                                label="Total Deals"
-                                value={String(overview!.totalDeals)}
-                                sub={`${overview!.wonDeals} won · ${overview!.lostDeals} lost`}
-                                icon={<Handshake className="h-5 w-5" />}
-                                iconBg="bg-violet-50"
-                                iconColor="text-violet-500"
-                            />
-                            <StatCard
-                                label="Revenue Won"
-                                value={fmt(overview!.totalRevenue)}
-                                sub="From closed-won deals"
-                                icon={<DollarSign className="h-5 w-5" />}
-                                iconBg="bg-green-50"
-                                iconColor="text-green-600"
-                            />
-                            <StatCard
-                                label="Deals Lost"
-                                value={String(overview!.lostDeals)}
-                                sub="Closed-lost deals"
-                                icon={<XCircle className="h-5 w-5" />}
-                                iconBg="bg-red-50"
-                                iconColor="text-red-500"
-                            />
+                    {/* Charts row */}
+                    <div className="charts-grid">
+
+                        {/* Bar chart */}
+                        <div className="chart-card chart-bar">
+                            <div className="chart-header">
+                                <h3 className="chart-title">Deals by Stage</h3>
+                                <button className="chart-menu-btn">
+                                    <MoreHorizontal className="h-5 w-5" />
+                                </button>
+                            </div>
+                            <div className="chart-body">
+                                {barData.length === 0 ? (
+                                    <div className="chart-empty">No deal data yet</div>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height={220}>
+                                        <BarChart
+                                            data={barData}
+                                            margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+                                            barCategoryGap="30%"
+                                        >
+                                            <CartesianGrid
+                                                strokeDasharray="3 3"
+                                                vertical={false}
+                                                stroke="#e5e7eb"
+                                            />
+                                            <XAxis
+                                                dataKey="stage"
+                                                tick={{ fontSize: 12, fill: "#9ca3af" }}
+                                                axisLine={false}
+                                                tickLine={false}
+                                            />
+                                            <YAxis
+                                                tick={{ fontSize: 12, fill: "#9ca3af" }}
+                                                axisLine={false}
+                                                tickLine={false}
+                                                allowDecimals={false}
+                                            />
+                                            <Tooltip
+                                                content={<BarTip />}
+                                                cursor={{ fill: "rgba(0,0,0,0.03)", radius: 6 }}
+                                            />
+                                            <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={52}>
+                                                {barData.map((entry, i) => (
+                                                    <Cell key={i} fill={entry.fill} fillOpacity={0.85} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Win rate */}
-                        <WinRateCard
-                            rate={winRate}
-                            won={overview!.wonDeals}
-                            total={overview!.totalDeals}
-                        />
-
-                        {/* Charts row */}
-                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
-                            {/* Bar chart */}
-                            <Card className="lg:col-span-3 rounded-2xl border-0 shadow-lg bg-card">
-                                <CardHeader className="pb-0 pt-5 px-6">
-                                    <CardTitle className="text-sm font-semibold text-foreground">
-                                        Deals by Stage
-                                    </CardTitle>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
-                                        Distribution of deals across pipeline stages
-                                    </p>
-                                </CardHeader>
-                                <CardContent className="pt-4 px-4 pb-5">
-                                    {barData.length === 0 ? (
-                                        <div className="flex items-center justify-center h-56 text-muted-foreground text-sm">
-                                            No deal data yet
-                                        </div>
-                                    ) : (
-                                            <ResponsiveContainer width="100%" height={240}>
-                                            <BarChart
-                                                data={barData}
-                                                margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
-                                                    barCategoryGap="40%"
-                                                    barGap={4}
-                                            >
-                                                <CartesianGrid
-                                                    strokeDasharray="3 3"
-                                                    vertical={false}
-                                                    stroke="hsl(var(--border))"
-                                                />
-                                                <XAxis
-                                                    dataKey="stage"
-                                                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                                                    axisLine={false}
-                                                    tickLine={false}
-                                                />
-                                                <YAxis
-                                                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                                                    axisLine={false}
-                                                    tickLine={false}
-                                                    allowDecimals={false}
-                                                />
-                                                    <Tooltip
-                                                        content={<BarTip />}
-                                                        cursor={{ fill: "rgba(0,0,0,0.03)", radius: 6 }}
-                                                    />
-                                                    <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={52}>
-                                                    {barData.map((entry, i) => (
-                                                        <Cell key={i} fill={entry.fill} fillOpacity={0.85} />
-                                                    ))}
-                                                </Bar>
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    )}
-
-                                    {/* Legend */}
-                                    <div className="flex flex-wrap gap-4 mt-2 px-2">
-                                        {Object.entries(STAGE_COLORS).map(([stage, color]) => (
-                                            <div key={stage} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-                                                {stage}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Donut chart */}
-                            <Card className="lg:col-span-2 rounded-2xl border-0 shadow-lg bg-card">
-                                <CardHeader className="pb-0 pt-5 px-6">
-                                    <CardTitle className="text-sm font-semibold text-foreground">
-                                        Leads by Status
-                                    </CardTitle>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
-                                        Breakdown by current lead status
-                                    </p>
-                                </CardHeader>
-                                <CardContent className="pt-2 px-6 pb-5">
-                                    {pieData.length === 0 ? (
-                                        <div className="flex items-center justify-center h-56 text-muted-foreground text-sm">
-                                            No lead data yet
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center">
-                                                <ResponsiveContainer width="100%" height={200}>
+                        {/* Donut chart */}
+                        <div className="chart-card chart-pie">
+                            <div className="chart-header">
+                                <h3 className="chart-title">Leads by Status</h3>
+                                <div className="chart-dots">
+                                    {pieData.map((entry, i) => (
+                                        <span
+                                            key={i}
+                                            className="chart-dot"
+                                            style={{ backgroundColor: entry.fill }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="chart-body chart-pie-body">
+                                {pieData.length === 0 ? (
+                                    <div className="chart-empty">No lead data yet</div>
+                                ) : (
+                                    <div className="pie-container">
+                                        <div className="pie-chart-wrapper">
+                                            <ResponsiveContainer width="100%" height={220}>
                                                 <PieChart>
                                                     <Pie
                                                         data={pieData}
                                                         cx="50%"
                                                         cy="50%"
-                                                            innerRadius={60}
-                                                            outerRadius={88}
-                                                            paddingAngle={3}
+                                                        innerRadius={60}
+                                                        outerRadius={90}
+                                                        paddingAngle={3}
                                                         dataKey="value"
                                                         strokeWidth={0}
+                                                        label={false}
                                                     >
                                                         {pieData.map((entry, i) => (
-                                                            <Cell key={i} fill={entry.fill} fillOpacity={0.85} />
+                                                            <Cell key={i} fill={entry.fill} fillOpacity={0.9} />
                                                         ))}
                                                     </Pie>
                                                     <Tooltip content={<PieTip />} />
+                                                    {/* Center label */}
+                                                    <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: '28px', fontWeight: 700, fill: '#1f2937' }}>
+                                                        {totalLeads}
+                                                    </text>
+                                                    <text x="50%" y="57%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: '10px', fontWeight: 600, fill: '#9ca3af', letterSpacing: '0.05em' }}>
+                                                        TOTAL LEADS
+                                                    </text>
                                                 </PieChart>
                                             </ResponsiveContainer>
-
-                                                {/* Legend */}
-                                                <div className="w-full space-y-2.5 mt-1">
-                                                {pieData.map((entry, i) => {
-                                                    const total = pieData.reduce((s, d) => s + d.value, 0);
-                                                    const pct = total > 0 ? Math.round((entry.value / total) * 100) : 0;
-                                                    return (
-                                                        <div key={i} className="flex items-center justify-between text-xs">
-                                                            <div className="flex items-center gap-2">
-                                                                <span
-                                                                    className="h-2 w-2 rounded-full shrink-0"
-                                                                    style={{ backgroundColor: entry.fill }}
-                                                                />
-                                                                <span className="text-muted-foreground capitalize">
-                                                                    {entry.name.toLowerCase()}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden">
-                                                                    <div
-                                                                        className="h-full rounded-full"
-                                                                        style={{ width: `${pct}%`, backgroundColor: entry.fill, opacity: 0.85 }}
-                                                                    />
-                                                                </div>
-                                                                <span className="font-semibold text-foreground w-7 text-right">
-                                                                    {pct}%
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
                                         </div>
-                                    )}
-                                </CardContent>
-                            </Card>
+                                        <div className="pie-legend">
+                                            {pieData.map((entry, i) => {
+                                                const total = pieData.reduce((s, d) => s + d.value, 0);
+                                                const pct = total > 0 ? Math.round((entry.value / total) * 100) : 0;
+                                                return (
+                                                    <div key={i} className="pie-legend-item">
+                                                        <span
+                                                            className="pie-legend-dot"
+                                                            style={{ backgroundColor: entry.fill }}
+                                                        />
+                                                        <span className="pie-legend-label">
+                                                            {entry.name} ({pct}%)
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                )}
-            </div>
-        </div>
+                </div>
+            )}
+        </>
     );
 };
 

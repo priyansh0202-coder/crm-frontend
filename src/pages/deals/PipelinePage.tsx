@@ -202,7 +202,7 @@ export const PipelinePage = () => {
 
     if (error) {
         return (
-            <div className="container mx-auto px-4 py-8">
+            <div>
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-destructive">
                     <AlertCircle className="h-10 w-10" />
                     <p className="text-sm font-medium">{error}</p>
@@ -213,7 +213,7 @@ export const PipelinePage = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-3xl font-bold">Sales Pipeline</h1>
